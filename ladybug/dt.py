@@ -47,6 +47,11 @@ class DateTime(datetime):
             ))
 
     def __reduce_ex__(self, protocol):
+
+        """Call the __new__() constructor when the class instance is unpickled.
+
+        This method is necessary for the pickle.loads() call to work.
+        """
         return (type(self), (self.month, self.day, self.hour, self.minute))
 
     @classmethod
@@ -297,6 +302,12 @@ class Date(date):
             raise ValueError("{}:\n\t({}/{})(m/d)".format(e, month, day))
 
     def __reduce_ex__(self, protocol):
+
+        """Call the __new__() constructor when the class instance is unpickled.
+
+        This method is necessary for the pickle.loads() call to work.
+        """
+
         return (type(self), (self.month, self.day, self.leap_year))
 
     @classmethod
@@ -433,6 +444,13 @@ class Time(time):
         except ValueError as e:
             raise ValueError("{}:\n\t({}:{})(h:m)".format(e, hour, minute))
     def __reduce_ex__(self, protocol):
+        return (type(self), (self.hour, self.minute))
+
+    def __reduce_ex__(self, protocol):
+        """Call the __new__() constructor when the class instance is unpickled.
+
+        This method is necessary for the pickle.loads() call to work.
+        """
         return (type(self), (self.hour, self.minute))
 
     @classmethod
