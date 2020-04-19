@@ -1,7 +1,7 @@
 # coding=utf-8
 from __future__ import division
 
-from ladybug.legend import Legend, LegendParameters
+from ladybug.legend import Legend, LegendParameters, LegendParametersCategorized
 from ladybug.color import Color, Colorset, ColorRange
 from ladybug.datatype.thermalcondition import PredictedMeanVote
 
@@ -21,12 +21,12 @@ def test_init_legend_parameters():
 
     assert leg_par.min == 0
     assert leg_par.max == 1000
-    assert leg_par.is_segment_count_default is True
-    assert leg_par.is_title_default is True
-    assert leg_par.is_base_plane_default is True
-    assert leg_par.is_segment_height_default is True
-    assert leg_par.is_segment_width_default is True
-    assert leg_par.is_text_height_default is True
+    assert leg_par.is_segment_count_default
+    assert leg_par.is_title_default
+    assert leg_par.is_base_plane_default
+    assert leg_par.is_segment_height_default
+    assert leg_par.is_segment_width_default
+    assert leg_par.is_text_height_default
 
     leg_par_copy = leg_par.duplicate()
     assert leg_par_copy.min == leg_par.min
@@ -64,35 +64,17 @@ def test_colors():
         leg_par.colors = [0, 1]
 
 
-def test_continuous_colors():
-    """Test the LegendParameter continuous_colors property."""
-    leg_par = LegendParameters()
-    leg_par.continuous_colors = False
-
-    assert leg_par.continuous_colors is False
-    leg_par_copy = leg_par.duplicate()
-    assert leg_par_copy.continuous_colors is False
-
-    leg_par.continuous_colors = True
-    assert leg_par.continuous_colors is True
-
-    with pytest.raises(Exception):
-        leg_par = LegendParameters(continuous_colors='yes')
-    with pytest.raises(Exception):
-        leg_par.continuous_colors = 'yes'
-
-
 def test_continuous_legend():
     """Test the LegendParameter continuous_legend property."""
     leg_par = LegendParameters()
     leg_par.continuous_legend = True
 
-    assert leg_par.continuous_legend is True
+    assert leg_par.continuous_legend
     leg_par_copy = leg_par.duplicate()
-    assert leg_par_copy.continuous_legend is True
+    assert leg_par_copy.continuous_legend
 
     leg_par.continuous_legend = False
-    assert leg_par.continuous_legend is False
+    assert not leg_par.continuous_legend
 
     with pytest.raises(Exception):
         leg_par = LegendParameters(continuous_legend='yes')
@@ -105,7 +87,7 @@ def test_title():
     leg_par = LegendParameters(title='m2')
 
     assert leg_par.title == 'm2'
-    assert leg_par.is_title_default is False
+    assert not leg_par.is_title_default
     leg_par_copy = leg_par.duplicate()
     assert leg_par_copy.title == 'm2'
 
@@ -159,12 +141,12 @@ def test_vertical():
     leg_par = LegendParameters()
     leg_par.vertical = False
 
-    assert leg_par.vertical is False
+    assert not leg_par.vertical
     leg_par_copy = leg_par.duplicate()
-    assert leg_par_copy.vertical is False
+    assert not leg_par_copy.vertical
 
     leg_par.vertical = True
-    assert leg_par.vertical is True
+    assert leg_par.vertical
 
     with pytest.raises(Exception):
         leg_par = LegendParameters(vertical='yes')
@@ -178,7 +160,7 @@ def test_base_plane():
         base_plane=Plane(Vector3D(0, 0, 0), Point3D(10, 10, 0)))
 
     assert leg_par.base_plane.o == Point3D(10, 10, 0)
-    assert leg_par.is_base_plane_default is False
+    assert not leg_par.is_base_plane_default
     leg_par_copy = leg_par.duplicate()
     assert leg_par_copy.base_plane.o == Point3D(10, 10, 0)
 
@@ -197,7 +179,7 @@ def test_segment_height():
     leg_par.segment_height = 3
 
     assert leg_par.segment_height == 3
-    assert leg_par.is_segment_height_default is False
+    assert not leg_par.is_segment_height_default
     leg_par_copy = leg_par.duplicate()
     assert leg_par_copy.segment_height == 3
 
@@ -216,7 +198,7 @@ def test_segment_width():
     leg_par.segment_width = 3
 
     assert leg_par.segment_width == 3
-    assert leg_par.is_segment_width_default is False
+    assert not leg_par.is_segment_width_default
     leg_par_copy = leg_par.duplicate()
     assert leg_par_copy.segment_width == 3
 
@@ -235,7 +217,7 @@ def test_text_height():
     leg_par.text_height = 0.25
 
     assert leg_par.text_height == 0.25
-    assert leg_par.is_text_height_default is False
+    assert not leg_par.is_text_height_default
     leg_par_copy = leg_par.duplicate()
     assert leg_par_copy.text_height == 0.25
 
@@ -280,14 +262,14 @@ def test_init_legend():
     assert len(legend.values) == 2
     assert legend.legend_parameters.min == 0
     assert legend.legend_parameters.max == 10
-    assert legend.is_min_default is True
-    assert legend.is_max_default is True
-    assert legend.legend_parameters.is_segment_count_default is True
-    assert legend.legend_parameters.is_title_default is True
-    assert legend.legend_parameters.is_base_plane_default is True
-    assert legend.legend_parameters.is_segment_height_default is True
-    assert legend.legend_parameters.is_segment_width_default is True
-    assert legend.legend_parameters.is_text_height_default is True
+    assert legend.is_min_default
+    assert legend.is_max_default
+    assert legend.legend_parameters.is_segment_count_default
+    assert legend.legend_parameters.is_title_default
+    assert legend.legend_parameters.is_base_plane_default
+    assert legend.legend_parameters.is_segment_height_default
+    assert legend.legend_parameters.is_segment_width_default
+    assert legend.legend_parameters.is_text_height_default
 
     legend_copy = legend.duplicate()
     assert legend_copy.values == legend.values
@@ -295,14 +277,14 @@ def test_init_legend():
     assert legend_copy.legend_parameters.max == legend.legend_parameters.max
     assert legend_copy.legend_parameters.segment_count == \
         legend.legend_parameters.segment_count
-    assert legend_copy.is_min_default is True
-    assert legend_copy.is_max_default is True
-    assert legend_copy.legend_parameters.is_segment_count_default is True
-    assert legend_copy.legend_parameters.is_title_default is True
-    assert legend_copy.legend_parameters.is_base_plane_default is True
-    assert legend_copy.legend_parameters.is_segment_height_default is True
-    assert legend_copy.legend_parameters.is_segment_width_default is True
-    assert legend_copy.legend_parameters.is_text_height_default is True
+    assert legend_copy.is_min_default
+    assert legend_copy.is_max_default
+    assert legend_copy.legend_parameters.is_segment_count_default
+    assert legend_copy.legend_parameters.is_title_default
+    assert legend_copy.legend_parameters.is_base_plane_default
+    assert legend_copy.legend_parameters.is_segment_height_default
+    assert legend_copy.legend_parameters.is_segment_width_default
+    assert legend_copy.legend_parameters.is_text_height_default
 
 
 def test_init_legend_with_parameter():
@@ -312,8 +294,8 @@ def test_init_legend_with_parameter():
     assert len(legend.values) == 2
     assert legend.legend_parameters.min == 2
     assert legend.legend_parameters.max == 8
-    assert legend.is_min_default is False
-    assert legend.is_max_default is False
+    assert not legend.is_min_default
+    assert not legend.is_max_default
 
 
 def test_legend_to_from_dict():
@@ -342,13 +324,13 @@ def test_legend_title():
     """Test the title property."""
     legend = Legend(range(5))
     assert legend.title == ''
-    assert legend.legend_parameters.is_title_default is True
+    assert legend.legend_parameters.is_title_default
     assert legend.title_location.o == Point3D(0, 11.25, 0)
     assert legend.title_location_2d == Point2D(0, 11.25)
 
     legend = Legend(range(5), LegendParameters(segment_count=5, title='C'))
     assert legend.title == 'C'
-    assert legend.legend_parameters.is_title_default is False
+    assert not legend.legend_parameters.is_title_default
     assert legend.title_location.o == Point3D(0, 5.25, 0)
     assert legend.title_location_2d == Point2D(0, 5.25)
 
@@ -386,14 +368,6 @@ def test_segment_text_ordinal_dictionary():
     assert len(legend.segment_text_location) == len(legend.segment_text) == 3
     assert legend.segment_text == ['low', 'desired', 'too much']
     assert len(set(legend.value_colors)) > 100
-
-    legend = Legend(results, LegendParameters(min=300, max=2000, segment_count=3))
-    legend.legend_parameters.ordinal_dictionary = ordinal_dict
-    legend.legend_parameters.continuous_colors = False
-
-    assert len(legend.segment_text_location) == len(legend.segment_text) == 3
-    assert legend.segment_text == ['low', 'desired', 'too much']
-    assert len(set(legend.value_colors)) == 3
 
 
 def test_segment_text_ordinal_dictionary_large():
@@ -448,3 +422,71 @@ def test_segment_mesh_2d():
     legend.legend_parameters.vertical = True
     assert len(legend.segment_mesh_2d.faces) == 5
     assert len(legend.segment_mesh_2d.vertices) == 12
+
+
+def test_init_legend_parameters_categorized():
+    """Test the initialization of LegendParametersCategorized objects."""
+    leg_colors = [Color(0, 0, 255), Color(0, 255, 0), Color(255, 0, 0)]
+    leg_par = LegendParametersCategorized([300, 2000], leg_colors)
+    leg_par.decimal_count = 0
+    str(leg_par)  # Test the LegendParametersCategorized representation
+
+    assert leg_par.domain == (300, 2000)
+    assert leg_par.colors == tuple(leg_colors)
+    assert leg_par.category_names == ('<300', '300 - 2000', '>2000')
+    assert leg_par.min == 300
+    assert leg_par.max == 2000
+    assert leg_par.is_segment_count_default
+    assert leg_par.is_title_default
+    assert leg_par.is_base_plane_default
+    assert leg_par.is_segment_height_default
+    assert leg_par.is_segment_width_default
+    assert leg_par.is_text_height_default
+
+    leg_par_copy = leg_par.duplicate()
+    assert leg_par_copy.domain == leg_par.domain
+    assert leg_par_copy.colors == leg_par.colors
+    assert leg_par_copy.category_names == leg_par.category_names
+
+
+def test_categorized_to_from_dict():
+    """Test the LegendParametersCategorized to/from dict methods."""
+    leg_colors = [Color(0, 0, 255), Color(0, 255, 0), Color(255, 0, 0)]
+    leg_par = LegendParametersCategorized([300, 2000], leg_colors)
+    leg_par_dict = leg_par.to_dict()
+    new_leg_par = LegendParametersCategorized.from_dict(leg_par_dict)
+    assert new_leg_par.to_dict() == leg_par_dict
+
+
+def test_categorized_colors():
+    """Test the LegendParametersCategorized colors property."""
+    data = [100, 300, 500, 1000, 2000, 3000]
+    leg_colors = [Color(0, 0, 255), Color(0, 255, 0), Color(255, 0, 0)]
+    legend_par = LegendParametersCategorized([300, 2000], leg_colors)
+
+    legend = Legend(data, legend_par)
+    assert legend.segment_colors == tuple(leg_colors)
+    assert legend.value_colors == \
+        (Color(0, 0, 255), Color(0, 255, 0), Color(0, 255, 0), Color(0, 255, 0),
+         Color(0, 255, 0), Color(255, 0, 0))
+
+    legend.legend_parameters.continuous_colors = True
+    assert legend.value_colors == \
+        (Color(0, 0, 255), Color(0, 0, 255), Color(0, 60, 195), Color(0, 210, 45),
+         Color(255, 0, 0), Color(255, 0, 0))
+
+
+def test_categorized_category_names():
+    """Test the LegendParametersCategorized category_names property."""
+    data = [100, 300, 500, 1000, 2000, 3000]
+    leg_colors = [Color(0, 0, 255), Color(0, 255, 0), Color(255, 0, 0)]
+    legend_par = LegendParametersCategorized([300, 2000], leg_colors)
+    cat_names = ['low', 'desired', 'too much']
+    legend_par.category_names = cat_names
+    legend = Legend(data, legend_par)
+
+    assert legend_par.category_names == tuple(cat_names)
+    assert legend.segment_text == tuple(cat_names)
+
+    with pytest.raises(AssertionError):
+        legend_par.category_names = ['low', 'desired', 'too much', 'not a category']

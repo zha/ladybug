@@ -18,6 +18,7 @@ def test_init():
                    longitude=longitude, time_zone=time_zone,
                    elevation=elevation, station_id=station_id, source=source)
 
+    str(loc)  # test the string representation
     assert loc.city == city
     assert loc.country == country
     assert loc.latitude == latitude
@@ -110,6 +111,14 @@ def test_dict_methods():
     assert loc_from_dict.time_zone == time_zone
     assert loc_from_dict.elevation == elevation
     assert loc_from_dict.country == country
+
+
+def test_idf_methods():
+    """Test the to/from idf methods."""
+    loc = Location('Tehran', '', 'Iran', 36, 34, 3.5, 54)
+    loc_idf = loc.to_idf()
+    new_idf = Location.from_idf(loc_idf)
+    assert loc_idf == new_idf.to_idf()
 
 
 def test_duplicate():

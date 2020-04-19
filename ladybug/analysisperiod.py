@@ -187,11 +187,6 @@ class AnalysisPeriod(object):
             raise ValueError(str(e))
 
     @property
-    def isAnalysisPeriod(self):
-        """Return True."""
-        return True
-
-    @property
     def st_month(self):
         """Start month."""
         return self.st_time.month
@@ -243,7 +238,7 @@ class AnalysisPeriod(object):
 
     @property
     def datetimes(self):
-        """A sorted list of datetimes in this analysis period."""
+        """A sorted list of hourly datetimes in this analysis period."""
         if self._timestamps_data is None:
             self._calculate_timestamps()
         return tuple(DateTime.from_moy(moy, self.is_leap_year)
@@ -251,7 +246,8 @@ class AnalysisPeriod(object):
 
     @property
     def moys(self):
-        """A sorted list of minutes of year in this analysis period as integers."""
+        """A sorted list of hourly minutes of year in this analysis period as integers.
+        """
         if self._timestamps_data is None:
             self._calculate_timestamps()
         return self._timestamps_data
@@ -344,8 +340,10 @@ class AnalysisPeriod(object):
     def is_time_included(self, time):
         """Check if time is included in analysis period.
 
-        Return True if time is inside this analysis period,
-        otherwise return False
+        Note that time filtering in Ladybug Tools is slightly different than "normal"
+        filtering since start hour and end hour will be applied for every day.
+        For instance 2/20 9am to 2/22 5pm means hour between 9-17 during 20, 21
+        and 22 of Feb.
 
         Args:
             time: A DateTime to be tested
@@ -355,10 +353,6 @@ class AnalysisPeriod(object):
         """
         if self._timestamps_data is None:
             self._calculate_timestamps()
-        # time filtering in Ladybug Tools is slightly different than "normal"
-        # filtering since start hour and end hour will be applied for every day.
-        # For instance 2/20 9am to 2/22 5pm means hour between 9-17
-        # during 20, 21 and 22 of Feb.
         return time.moy in self._timestamps_data
 
     def duplicate(self):
@@ -430,17 +424,6 @@ class AnalysisPeriod(object):
         end_doy = sum(self._num_of_days_each_month[:end_time.month-1]) + end_time.day + 1
         return list(range(start_doy, end_doy))
 
-    def __eq__(self, other):
-        """Whether the inputs match between two analysis periods."""
-        if isinstance(other, self.__class__):
-            if (self.st_time, self.end_time, self.timestep, self.is_leap_year) == \
-                    (other.st_time, other.end_time, other.timestep, other.is_leap_year):
-                return True
-        return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
     def __len__(self):
         """Number of hours of the year.
 
@@ -467,3 +450,16 @@ class AnalysisPeriod(object):
              self.end_time.month, self.end_time.day,
              self.st_time.hour, self.end_time.hour,
              self.timestep)
+
+    def __key(self):
+        return(self.st_time, self.end_time, self.timestep, self.is_leap_year)
+
+    
+    def __hash__(self):
+        return hash(self.__key())
+    
+    def __eq__(self, other):
+        return isinstance(other, AnalysisPeriod) and self.__key() == other.__key()
+    
+    def __ne__(self, other):
+        return not self.__eq__(other)

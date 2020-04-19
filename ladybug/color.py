@@ -221,7 +221,12 @@ class Colorset(object):
              (243, 74, 0), (255, 0, 0)],
         25: [(69, 92, 166), (66, 128, 167), (62, 176, 168), (78, 181, 137),
              (120, 188, 59), (139, 184, 46), (197, 157, 54), (220, 144, 57),
-             (228, 100, 59), (233, 68, 60)]
+             (228, 100, 59), (233, 68, 60)],
+        26: [(230, 180, 60), (230, 215, 150), (165, 82, 0),
+             (128, 20, 20), (255, 128, 128), (64, 128, 128),
+             (128, 128, 128), (255, 128, 128), (128, 64, 0),
+             (64, 180, 255), (160, 150, 100), (120, 75, 190), (255, 255, 200),
+             (0, 128, 0)]
     }
 
     def __init__(self):
@@ -358,6 +363,17 @@ class Colorset(object):
         """Multi-colored colors with the least saturation."""
         return tuple(Color(*color) for color in cls._colors[25])
 
+    @classmethod
+    def openstudio_palette(cls):
+        """Standard color set for the OpenStudio surface types. Ordered as follows.
+
+        Exterior Wall, Interior Wall, Undreground Wall,
+        Roof, Ceiling, Underground Roof,
+        Exposed Floor, Interior Floor, Ground Floor,
+        Window, Door, Shade, Air
+        """
+        return tuple(Color(*color) for color in cls._colors[26])
+
     def __len__(self):
         """Return length of currently installed color sets."""
         return len(self._colors)
@@ -390,7 +406,7 @@ class ColorRange(object):
         continuous_colors: Boolean. If True, the colors generated from the
             color range will be in a continuous gradient. If False,
             they will be categorized in incremental groups according to the
-            number_of_segments. Default is True for continuous colors.
+            number_of_segments. Default: True for continuous colors.
 
     Properties:
         * colors
@@ -424,7 +440,7 @@ class ColorRange(object):
             >> (R:245, G:239, B:103)
     """
 
-    def __init__(self, colors=None, domain=None, continuous_colors=None):
+    def __init__(self, colors=None, domain=None, continuous_colors=True):
         """Initiate Ladybug color range.
         """
         self._continuous_colors = True if continuous_colors is None \
@@ -514,12 +530,11 @@ class ColorRange(object):
                 _n = dom[0]
                 dom = tuple(_n + c * _step for c in range(len(self._colors)))
             else:
-                assert len(self._colors) == len(dom), \
+                assert len(self._colors) >= len(dom), \
                     "For a continuous color range, the length of the domain should " \
-                    "be 2 or equal to number of colors."
+                    "be 2 or greater than the number of colors."
         else:  # segmented
-            # Number of colors should be at least one more than number
-            # of domain values
+            # Number of colors should be at least one more than number of domain values
             assert len(self._colors) > len(dom), \
                 "For a segmented color range, the length of colors " + \
                 "should be more than the number of domain values ."

@@ -4,6 +4,9 @@ from __future__ import division
 
 from datetime import datetime, date, time
 
+MONTHNAMES = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+              'Oct', 'Nov', 'Dec')
+
 
 class DateTime(datetime):
     """Create Ladybug Date time.
@@ -140,7 +143,13 @@ class DateTime(datetime):
 
             dt = DateTime.from_date_time_string("31 Dec 12:00")
         """
-        dt = datetime.strptime(datetime_string, '%d %b %H:%M')
+        try:
+            dt = datetime.strptime(datetime_string, '%d %b %H:%M')
+        except AttributeError:  # older Python version before strptime
+            vals = datetime_string.split(' ')
+            tim = vals[-1].split(':')
+            dt = datetime(2016, MONTHNAMES.index(vals[1]) + 1, int(vals[0]),
+                          int(tim[0]), int(tim[1]))
         return cls(dt.month, dt.day, dt.hour, dt.minute, leap_year)
 
     @classmethod
@@ -197,10 +206,12 @@ class DateTime(datetime):
         """
         return (self.doy - 1) * 24 + self.hour
 
+    @property
     def date(self):
         """Get a Date object associated with this DateTime."""
         return Date(self.month, self.day, self.leap_year)
 
+    @property
     def time(self):
         """Get a Time object associated with this DateTime."""
         return Time(self.hour, self.minute)
@@ -369,7 +380,11 @@ class Date(date):
 
             dt = Date.from_date_string("31 Dec")
         """
-        dt = datetime.strptime(date_string, '%d %b')
+        try:
+            dt = datetime.strptime(date_string, '%d %b')
+        except AttributeError:  # older Python version before strptime
+            vals = date_string.split(' ')
+            dt = datetime(2016, MONTHNAMES.index(vals[1]) + 1, int(vals[0]))
         return cls(dt.month, dt.day, leap_year)
 
     @classmethod
@@ -491,7 +506,11 @@ class Time(time):
 
             dt = Time.from_time_string("12:00")
         """
-        dt = datetime.strptime(time_string, '%H:%M')
+        try:
+            dt = datetime.strptime(time_string, '%H:%M')
+        except AttributeError:  # older Python version before strptime
+            vals = time_string.split(':')
+            dt = datetime(int(vals[0]), int(vals[1]))
         return cls(dt.hour, dt.minute)
 
     @classmethod

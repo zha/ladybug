@@ -2,8 +2,10 @@
 from pytest import approx
 import os
 from ladybug.location import Location
+from ladybug.dt import Date
 from ladybug.analysisperiod import AnalysisPeriod
-from ladybug.designday import DDY, DesignDay
+from ladybug.designday import DesignDay
+from ladybug.ddy import DDY
 
 
 def test_import_ddy():
@@ -27,6 +29,8 @@ def test_dict_methods():
     ddy_dict = ddy.to_dict()
     reconstructed_ddy = DDY.from_dict(ddy_dict)
     assert ddy_dict == reconstructed_ddy.to_dict()
+    for dday1, dday2 in zip(ddy.design_days, reconstructed_ddy.design_days):
+        assert dday1 == dday2
 
 
 def test_ddy_from_design_day():
@@ -42,7 +46,7 @@ def test_write_ddy():
     """Test write ddy."""
     relative_path = './tests/fixtures/ddy/chicago.ddy'
     ddy = DDY.from_ddy_file(relative_path)
-    new_file_path = './tests/ddy/chicago_edited.ddy'
+    new_file_path = './tests/fixtures/ddy/chicago_edited.ddy'
     ddy.save(new_file_path)
 
 
@@ -61,9 +65,37 @@ def test_standard_ddy_properties():
 
     assert len(ddy.design_days) == 18
     for des_day in ddy.design_days:
-        assert hasattr(des_day, 'isDesignDay')
+        assert isinstance(des_day, DesignDay)
     assert len(ddy.filter_by_keyword('.4%')) == 4
     assert len(ddy.filter_by_keyword('99.6%')) == 3
+
+
+def test_duplicate():
+    """Test duplicate method for the DDY object."""
+    relative_path = './tests/fixtures/ddy/chicago_monthly.ddy'
+    ddy = DDY.from_ddy_file(relative_path)
+    ddy_dup = ddy.duplicate()
+
+    assert ddy is ddy
+    assert ddy is not ddy_dup
+    assert ddy == ddy_dup
+    ddy_dup[0].dry_bulb_condition.dry_bulb_max = 40
+    assert ddy != ddy_dup
+
+
+def test_duplicate_design_day():
+    """Test duplicate method for the DesignDay object."""
+    relative_path = './tests/fixtures/ddy/chicago_monthly.ddy'
+    ddy = DDY.from_ddy_file(relative_path)
+
+    des_day = ddy[0]
+    des_day_dup = des_day.duplicate()
+
+    assert des_day is des_day
+    assert des_day is not des_day_dup
+    assert des_day == des_day_dup
+    des_day_dup.dry_bulb_condition.dry_bulb_max = 40
+    assert des_day != des_day_dup
 
 
 def test_monthly_ddy_properties():
@@ -80,7 +112,7 @@ def test_monthly_ddy_properties():
 
     assert len(ddy.design_days) == 12
     for des_day in ddy.design_days:
-        assert hasattr(des_day, 'isDesignDay')
+        assert isinstance(des_day, DesignDay)
         assert des_day.day_type == 'SummerDesignDay'
 
 
@@ -88,10 +120,10 @@ def test_design_day_from_properties():
     """Test hourly data properties of a standard ddy."""
     location = Location('Test City', '-', 'USA', 34.20, -118.35, -8, 226)
     a_period = AnalysisPeriod(12, 21, 0, 12, 21, 23)
-    des_day = DesignDay.from_design_day_properties('Test Day', 'WinterDesignDay',
-                                                   location, a_period, 3.9, 0,
-                                                   'Wetbulb', 3.9, 98639, 0.8, 330,
-                                                   'ASHRAEClearSky', [0])
+    date = Date(12, 21)
+    des_day = DesignDay.from_design_day_properties(
+        'Test Day', 'WinterDesignDay', location, date, 3.9, 0,
+        'Wetbulb', 3.9, 98639, 0.8, 330, 'ASHRAEClearSky', [0])
     assert des_day.location == location
     new_period = des_day.analysis_period
     assert new_period.st_month == a_period.st_month
@@ -105,11 +137,10 @@ def test_design_day_from_properties():
 def test_design_day_hourly_data():
     """Test hourly data properties of a standard ddy."""
     location = Location('Test City', '-', 'USA', 34.20, -118.35, -8, 226)
-    a_period = AnalysisPeriod(8, 21, 0, 8, 21, 23)
-    des_day = DesignDay.from_design_day_properties('Test Day', 'SummerDesignDay',
-                                                   location, a_period, 36.8, 13.2,
-                                                   'Wetbulb', 20.5, 98639, 3.9, 170,
-                                                   'ASHRAETau', [0.436, 2.106])
+    date = Date(8, 21)
+    des_day = DesignDay.from_design_day_properties(
+        'Test Day', 'SummerDesignDay', location, date, 36.8, 13.2,
+        'Wetbulb', 20.5, 98639, 3.9, 170, 'ASHRAETau', [0.436, 2.106])
     # dry bulb values
     db_data_collect = des_day.hourly_dry_bulb
     assert db_data_collect[5] == approx(23.6, rel=1e-1)
@@ -149,3 +180,9 @@ def test_design_day_hourly_data():
     assert diffuse_horizontal_rad[11] == approx(165.32, rel=1e-1)
     assert global_horizontal_rad[0] == 0
     assert global_horizontal_rad[11] == approx(985.05, rel=1e-1)
+
+    # sky cover values
+    sc_data_collect = des_day.hourly_sky_cover
+
+    # sky cover values
+    hi_data_collect = des_day.hourly_horizontal_infrared

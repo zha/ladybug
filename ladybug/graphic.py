@@ -1,7 +1,7 @@
 # coding=utf-8
 from __future__ import division
 
-from .legend import Legend, LegendParameters
+from .legend import Legend, LegendParameters, LegendParametersCategorized
 
 from .datatype.base import DataTypeBase
 
@@ -37,6 +37,7 @@ class GraphicContainer(object):
         * lower_title_location
         * upper_title_location
     """
+    __slots__ = ('_legend', '_min_point', '_max_point', '_data_type', '_unit')
 
     def __init__(self, values, min_point, max_point,
                  legend_parameters=None, data_type=None, unit=None):
@@ -62,15 +63,16 @@ class GraphicContainer(object):
                 unit = data_type.units[0] if unit is None else unit
                 data_type.is_unit_acceptable(unit)
                 self.legend_parameters.title = unit if \
-                    self.legend_parameters.vertical is True \
+                    self.legend_parameters.vertical \
                     else '{} ({})'.format(data_type.name, unit)
             if data_type.unit_descr is not None and \
-                    self.legend_parameters.ordinal_dictionary is None:
+                    self.legend_parameters.ordinal_dictionary is None and not \
+                    isinstance(self.legend_parameters, LegendParametersCategorized):
                 self.legend_parameters.ordinal_dictionary = data_type.unit_descr
                 sorted_keys = sorted(data_type.unit_descr.keys())
-                if self.legend.is_min_default is True:
+                if self.legend.is_min_default:
                     self.legend_parameters.min = sorted_keys[0]
-                if self.legend.is_max_default is True:
+                if self.legend.is_max_default:
                     self.legend_parameters.max = sorted_keys[-1]
                 if self.legend_parameters.is_segment_count_default:
                     try:  # try to set the number of segments to align with ordinal text
@@ -87,11 +89,25 @@ class GraphicContainer(object):
 
         # set the default segment_height
         if self.legend_parameters.is_segment_height_default:
+            s_count = self.legend_parameters.segment_count
+            denom = s_count if s_count >= 6 else 6
             if self.legend_parameters.vertical:
-                seg_height = float((self._max_point.y - self._min_point.y) / 20)
+                seg_height = float((self._max_point.y - self._min_point.y) / denom)
             else:
-                seg_height = float((self._max_point.x - self._min_point.x) / 20)
+                seg_height = float((self._max_point.x - self._min_point.x) / (denom * 2))
             self.legend_parameters.segment_height = seg_height
+            self.legend_parameters._is_segment_height_default = True
+
+        # set the default segment_width
+        if self.legend_parameters.is_segment_width_default:
+            if self.legend_parameters.vertical:
+                seg_width = self.legend_parameters.segment_height / 2
+            else:
+                seg_width = self.legend_parameters.text_height * \
+                    (len(str(int(self.legend_parameters.max))) + \
+                    self.legend_parameters.decimal_count + 2)
+            self.legend_parameters.segment_width = seg_width
+            self.legend_parameters._is_segment_width_default = True
 
         # set the default base point
         if self.legend_parameters.is_base_plane_default:
@@ -105,6 +121,7 @@ class GraphicContainer(object):
                     3 * self.legend_parameters.text_height,
                     self._min_point.z)
             self.legend_parameters.base_plane = Plane(o=base_pt)
+            self.legend_parameters._is_base_plane_default = True
 
     @classmethod
     def from_dict(cls, data):
@@ -124,20 +141,22 @@ class GraphicContainer(object):
             "unit": None
             }
         """
-        optional_keys = ('legend_parameters', 'data_type', 'unit')
-        for key in optional_keys:
-            if key not in data:
-                data[key] = None
         legend_parameters = None
-        if data['legend_parameters'] is not None:
-            legend_parameters = LegendParameters.from_dict(data['legend_parameters'])
+        if 'legend_parameters' in data and data['legend_parameters'] is not None:
+            if data['legend_parameters']['type'] == 'LegendParametersCategorized':
+                legend_parameters = LegendParametersCategorized.from_dict(
+                    data['legend_parameters'])
+            else:
+                legend_parameters = LegendParameters.from_dict(data['legend_parameters'])
+
         data_type = None
-        if data['data_type'] is not None:
+        if 'data_type' in data and data['data_type'] is not None:
             data_type = DataTypeBase.from_dict(data['data_type'])
+        unit = data['unit'] if 'unit' in data else None
 
         return cls(data['values'], Point3D.from_dict(data['min_point']),
                    Point3D.from_dict(data['max_point']),
-                   legend_parameters, data_type, data['unit'])
+                   legend_parameters, data_type, unit)
 
     @property
     def values(self):

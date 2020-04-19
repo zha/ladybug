@@ -2,9 +2,8 @@
 """Base data type."""
 from __future__ import division
 
-from os.path import dirname, basename, isfile, join
-from os import listdir
-from importlib import import_module
+import os
+import importlib
 import re
 
 
@@ -25,6 +24,7 @@ class DataTypeBase(object):
         *   unit_descr
         *   point_in_time
         *   cumulative
+        *   normalized_type
     """
     _name = None
     _units = [None]
@@ -37,6 +37,7 @@ class DataTypeBase(object):
     _unit_descr = None
     _point_in_time = True
     _cumulative = False
+    _normalized_type = None
 
     _type_enumeration = None
 
@@ -89,8 +90,7 @@ class DataTypeBase(object):
             raise_exception: Set to True to raise an exception if not acceptable.
         """
         _is_acceptable = unit in self.units
-
-        if _is_acceptable or raise_exception is False:
+        if _is_acceptable or not raise_exception:
             return _is_acceptable
         else:
             raise ValueError(
@@ -166,8 +166,6 @@ class DataTypeBase(object):
             'type': 'DataTypeBase'
         }
 
-    # TODO: Un-comment the numeric check once we have gotten rid of the DataPoint class
-    # Presently, I can't add a check for DataPoint type because it's outside the module
     def _is_numeric(self, values):
         """Check to be sure values are numbers before doing numerical operations."""
         if len(values) > 0:
@@ -232,19 +230,17 @@ class DataTypeBase(object):
 
     @property
     def min(self):
-        """Lower limit for the data type.
+        """Number for the lower limit for the data type.
 
-        Values below lower limit should be physically
-        or mathematically impossible. (Default: -inf)
+        Values below this limit should be physically or mathematically impossible.
         """
         return self._min
 
     @property
     def max(self):
-        """ Upper limit for the data type.
+        """Number for the upper limit for the data type.
 
-        Values above upper limit should be physically
-        or mathematically impossible. (Default: +inf)
+        Values above this limit should be physically or mathematically impossible.
         """
         return self._max
 
@@ -260,22 +256,19 @@ class DataTypeBase(object):
 
     @property
     def unit_descr(self):
-        """A description of the data type units
+        """A dictionary that matches numerical values to text categories.
 
-        A dictionary is used to describe categories that the numerical values of
-        the units relate to.
-        This is useful if numerical values of the units relate to specific categories.
-        (eg. -1 = Cold, 0 = Neutral, +1 = Hot) (eg. 0 = False, 1 = True).
+        This will be None if there are no text categories that the data type can be
+        mapped to. (eg. -1 = Cold, 0 = Neutral, +1 = Hot) (eg. 0 = False, 1 = True).
         """
         return self._unit_descr
 
     @property
     def point_in_time(self):
-        """Whether the data type is point_in_time.
+        """Boolean to note whether data type is for a single instant in time.
 
-        A Boolean indicates that the data type represents conditions
-        at a single instant in time (True) or at an average or
-        accumulation over time (False) when found in hourly lists of data.
+        If False, the data type is meant to represent an average or accumulation
+        over time whenenever found in an array of time series data.
         (True Examples: Temperature, WindSpeed)
         (False Examples: Energy, Radiation, Illuminance)
         """
@@ -283,21 +276,23 @@ class DataTypeBase(object):
 
     @property
     def cumulative(self):
-        """Whether the data type is cumulative.
+        """Boolean to note if data type can be summed over time to yield meaningful data.
 
-        A Boolean indicates that the data type can be cumulative when it
-        is represented over time (True) or it can only be averaged over time
-        to be meaningful (False). Note that cumulative cannot be True
-        when point_in_time is also True.
+        If False, this data type can only be averaged over time to be meaningful.
+        Note that cumulative cannot be True when point_in_time is also True.
         (False Examples: Temperature, Irradiance, Illuminance)
         (True Examples: Energy, Radiation)
         """
         return self._cumulative
-
+    
     @property
-    def isDataType(self):
-        """Return True."""
-        return True
+    def normalized_type(self):
+        """A data type object representing the area-normalized version of this data type.
+
+        This will be None if the data type cannot be normalized per unit area to
+        yeild a meaningful data type.
+        """
+        return self._normalized_type
 
     def ToString(self):
         """Overwrite .NET ToString."""
@@ -316,7 +311,7 @@ class _DataTypeEnumeration(object):
     _GENERICTYPE = None
 
     def __init__(self, import_modules=True):
-        if import_modules is True:
+        if import_modules:
             self._import_modules()
 
         for clss in DataTypeBase.__subclasses__():
@@ -359,15 +354,15 @@ class _DataTypeEnumeration(object):
         return self._TYPES
 
     def _import_modules(self):
-        root_dir = dirname(__file__)
-        modules = listdir(dirname(__file__))
-        modules = [join(root_dir, mod) for mod in modules]
-        importable = ['.{}'.format(basename(f)[:-3]) for f in modules
-                      if isfile(f) and f.endswith('.py')
+        root_dir = os.path.dirname(__file__)
+        modules = os.listdir(os.path.dirname(__file__))
+        modules = [os.path.join(root_dir, mod) for mod in modules]
+        importable = ['.{}'.format(os.path.basename(f)[:-3]) for f in modules
+                      if os.path.isfile(f) and f.endswith('.py')
                       and not f.endswith('__init__.py')
                       and not f.endswith('base.py')]
         for mod in importable:
-            import_module(mod, 'ladybug.datatype')
+            importlib.import_module(mod, 'ladybug.datatype')
 
     def _all_subclasses(self, clss):
         return set(clss.__subclasses__()).union(
