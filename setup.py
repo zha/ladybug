@@ -8,8 +8,8 @@ with open('requirements.txt') as f:
 
 setuptools.setup(
     name="lbt-ladybug",
-    use_scm_version=True,
-    setup_requires=['setuptools_scm'],
+    # use_scm_version=True,
+    # setup_requires=['setuptools_scm'],
     author="Ladybug Tools",
     author_email="info@ladybug.tools",
     description="Ladybug is a Python library to load, analyze and modify EneregyPlus Weather files (epw).",
